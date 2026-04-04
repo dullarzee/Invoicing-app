@@ -6,10 +6,13 @@ import { backend_domain } from "./URLs";
 export const endpoints = {
   getClients: `${backend_domain}/api/clients`, //flags: ?includeInvoices=true/false,
   getInvoices: `${backend_domain}/api/invoices`,
+  getInvoiceById: `${backend_domain}/api/invoices`, //flags: /:id
   postClient: `${backend_domain}/api/clients/create`,
   postInvoice: `${backend_domain}/api/invoices/create`,
   updateClient: `${backend_domain}/api/clients`,
   updateInvoice: `${backend_domain}/api/invoices`,
   deleteInvoice: `${backend_domain}/api/invoices`,
   deleteClient: `${backend_domain}/api/clients`,
+
+  downloadInvoicePDF: `${backend_domain}/api/invoices/downloadPDF`, //flags: /:id
 };

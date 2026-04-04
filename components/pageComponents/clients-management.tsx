@@ -10,6 +10,7 @@ import { ClientFullResponseType } from "@/constants/types";
 import useDisclosure from "@/lib/disclosure";
 import { Modal } from "../modal";
 import { set } from "react-hook-form";
+import { Spinner } from "../ui/spinner";
 
 interface ClientType {
   id: string;
@@ -43,6 +44,8 @@ export default function ClientsManagement() {
     phoneNumber: "",
     id: "",
   });
+
+  const [loading, setLoading] = useState(true);
 
   const isFormValid = !Object.values(newClientData).every(
     (value) => value.trim() !== "",
@@ -92,13 +95,16 @@ export default function ClientsManagement() {
   useEffect(() => {
     const fetchClients = async () => {
       try {
+        setLoading(true);
         const { data } = await axios.get(
           `${endpoints.getClients}?includeInvoices=true`,
         );
         console.log(data);
         setClients(transformClientData(data as ClientFullResponseType));
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching clients: ", error);
+        setLoading(false);
       }
     };
     fetchClients();
@@ -122,29 +128,36 @@ export default function ClientsManagement() {
 
   const clientCreationHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
     await axios.post(endpoints.postClient, newClientData).then(({ data }) => {
       if (data.ok) {
         setShowForm(false);
         axios.get(endpoints.getClients).then(({ data }) => {
           setClients(transformClientData(data as ClientFullResponseType));
+          setLoading;
         });
       }
     });
+    setLoading(false);
   };
 
   const clientEditHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
+      setLoading(true);
       await axios
+
         .patch(`${endpoints.updateClient}/${clientToEdit.id}`, clientToEdit)
         .then(async ({ data }) => {
           const res = data.ok && (await axios.get(endpoints.getClients));
           setClients(transformClientData(res.data as ClientFullResponseType));
         });
       editClientModal.setOpen(false);
+      setLoading;
     } catch (error) {
       console.log("error updating client: ", error);
       editClientModal.setOpen(false);
+      setLoading;
     }
   };
 
@@ -253,89 +266,104 @@ export default function ClientsManagement() {
           </Card>
         </form>
       )}
+
       {/* Search */}
-      <Card className="p-4 border border-slate-200">
-        <div className="relative">
-          <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search clients by name or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+      {loading ? (
+        <div className=" flex flex-col items-center justify-center h-[300px]">
+          <Spinner className="mx-auto h-12 w-12" />
+          <p className="text-center text-muted-foreground">
+            Loading clients...
+          </p>
         </div>
-      </Card>
-      {/* Clients Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredClients.map((client) => (
-          <Card
-            key={client.id}
-            className="p-6 border border-slate-200 hover:shadow-lg transition-shadow"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-bold text-foreground">
-                  {client.companyName}
-                </h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {client.invoices} invoices
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    setClientToEdit({
-                      id: client.id,
-                      name: client.name,
-                      companyName: client.companyName,
-                      email: client.email,
-                      phoneNumber: client.phoneNumber,
-                    });
-                    editClientModal.setOpen(true);
-                  }}
-                  className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
-                >
-                  <Edit2 className="w-4 h-4 text-slate-600" />
-                </button>
-                <button
-                  onClick={() => {
-                    clientIdToDelete.current.id = client.id;
-                    clientIdToDelete.current.name = client.companyName;
-                    deleteModal.setOpen(true);
-                  }}
-                  className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-4 h-4 text-red-600" />
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Mail className="w-4 h-4" />
-                <a
-                  href={`mailto:${client.email}`}
-                  className="hover:text-blue-500"
-                >
-                  {client.email}
-                </a>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Phone className="w-4 h-4" />
-                <span>{client.phoneNumber}</span>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-slate-200">
-              <p className="text-xs text-muted-foreground">Total Invoiced</p>
-              <p className="text-xl font-bold text-foreground">
-                &#8358;{client.totalAmount}
-              </p>
+      ) : (
+        <>
+          <Card className="p-4 border border-slate-200">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search clients by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
           </Card>
-        ))}
-      </div>
+          {/* Clients Grid */}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filteredClients.map((client) => (
+              <Card
+                key={client.id}
+                className="p-6 border border-slate-200 hover:shadow-lg transition-shadow"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">
+                      {client.companyName}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {client.invoices} invoices
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setClientToEdit({
+                          id: client.id,
+                          name: client.name,
+                          companyName: client.companyName,
+                          email: client.email,
+                          phoneNumber: client.phoneNumber,
+                        });
+                        editClientModal.setOpen(true);
+                      }}
+                      className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4 text-slate-600" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        clientIdToDelete.current.id = client.id;
+                        clientIdToDelete.current.name = client.companyName;
+                        deleteModal.setOpen(true);
+                      }}
+                      className="p-2 hover:bg-red-100 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Mail className="w-4 h-4" />
+                    <a
+                      href={`mailto:${client.email}`}
+                      className="hover:text-blue-500"
+                    >
+                      {client.email}
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Phone className="w-4 h-4" />
+                    <span>{client.phoneNumber}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-slate-200">
+                  <p className="text-xs text-muted-foreground">
+                    Total Invoiced
+                  </p>
+                  <p className="text-xl font-bold text-foreground">
+                    &#8358;{client.totalAmount}
+                  </p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
       {/*modal for confirming client deletion*/}
       <Modal
         open={deleteModal.open}

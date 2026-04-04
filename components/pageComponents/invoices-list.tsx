@@ -11,6 +11,8 @@ import { type clientsType, type lineItemsTypes } from "./create-invoice";
 import { endpoints } from "@/constants/BEendpoints";
 import useDisclosure from "@/lib/disclosure";
 import { Modal } from "../modal";
+import { Spinner } from "../ui/spinner";
+import Link from "next/link";
 
 interface ResponseInvoiceType {
   id: string;
@@ -37,16 +39,21 @@ export default function InvoicesList() {
   const invoiceIdToDelete = useRef<string | null>(null);
   const modalClosure = useDisclosure();
 
+  const [loading, setLoading] = useState(true);
+
   const router = useRouter();
 
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
+        setLoading(true);
         const invoices = await axios.get(endpoints.getInvoices);
 
         setInvoices(transformInvoiceData(invoices.data));
+        setLoading(false);
       } catch (error) {
         console.log("fetching invoice unsuccessful");
+        setLoading(false);
       }
     };
     fetchInvoices();
@@ -82,6 +89,7 @@ export default function InvoicesList() {
   };
   const handleDelete = async (id: string) => {
     try {
+      setLoading(true);
       await axios
         .delete(`${endpoints.deleteInvoice}/${id}`)
         .then(async (res) => {
@@ -90,8 +98,10 @@ export default function InvoicesList() {
             setInvoices(transformInvoiceData(invoices.data));
           }
         });
+      setLoading(false);
     } catch (error) {
       console.log("Failed to delete invoice: ", error);
+      setLoading(false);
     }
     modalClosure.setOpen(false);
   };
@@ -123,129 +133,141 @@ export default function InvoicesList() {
       </div>
 
       {/* Filters */}
-      <Card className="p-4 border border-slate-200">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search by invoice ID or client..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-muted-foreground" />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Status</option>
-              <option value="PAID">Paid</option>
-              <option value="PENDING">Pending</option>
-              <option value="OVERDUE">Overdue</option>
-            </select>
-          </div>
+      {loading ? (
+        <div className=" flex flex-col items-center justify-center h-[300px]">
+          <Spinner className="mx-auto h-12 w-12" />
+          <p className="text-center text-muted-foreground">
+            Loading invoices...
+          </p>
         </div>
-      </Card>
-
-      {/* Invoices Table */}
-      <Card className="border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
-                  Invoice ID
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
-                  Client
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
-                  Amount
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
-                  Date
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
-                  Due Date
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredInvoices.map((invoice) => (
-                <tr
-                  key={invoice.invoiceId}
-                  className="border-b border-slate-200 hover:bg-slate-50 transition-colors"
+      ) : (
+        <div className="space-y-6">
+          <Card className="p-4 border border-slate-200">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search by invoice ID or client..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter className="w-5 h-5 text-muted-foreground" />
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <td className="px-6 py-4 text-sm font-medium text-foreground">
-                    {invoice.invoiceId}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-foreground">
-                    {invoice.clientName}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-semibold text-foreground">
-                    &#8358;{invoice.amount}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {invoice.createdAt}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {invoice.dueDate}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        invoice.status === "PAID"
-                          ? "bg-green-100 text-green-700"
-                          : invoice.status === "PENDING"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-red-100 text-red-700"
-                      }`}
+                  <option value="all">All Status</option>
+                  <option value="PAID">Paid</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="OVERDUE">Overdue</option>
+                </select>
+              </div>
+            </div>
+          </Card>
+
+          {/* Invoices Table */}
+          <Card className="border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
+                      Invoice ID
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
+                      Client
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
+                      Amount
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
+                      Date
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
+                      Due Date
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredInvoices.map((invoice) => (
+                    <tr
+                      key={invoice.invoiceId}
+                      className="border-b border-slate-200 hover:bg-slate-50 transition-colors"
                     >
-                      {invoice.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
-                        title="View"
-                      >
-                        <Eye className="w-4 h-4 text-slate-600" />
-                      </button>
-                      <button
-                        className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 className="w-4 h-4 text-slate-600" />
-                      </button>
-                      <button
-                        className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-                        title="Delete"
-                        onClick={() => {
-                          invoiceIdToDelete.current = invoice.invoiceId;
-                          modalClosure.setOpen(true);
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      <td className="px-6 py-4 text-sm font-medium text-foreground">
+                        {invoice.invoiceId}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-foreground">
+                        {invoice.clientName}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-semibold text-foreground">
+                        &#8358;{invoice.amount}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground">
+                        {invoice.createdAt}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground">
+                        {invoice.dueDate}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            invoice.status === "PAID"
+                              ? "bg-green-100 text-green-700"
+                              : invoice.status === "PENDING"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {invoice.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`${RoutesEnum.INVOICE_DETAIL}/${invoice.invoiceId}`}
+                            className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+                            title="View"
+                          >
+                            <Eye className="w-4 h-4 text-slate-600" />
+                          </Link>
+                          <button
+                            className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-4 h-4 text-slate-600" />
+                          </button>
+                          <button
+                            className="p-2 hover:bg-red-100 rounded-lg transition-colors"
+                            title="Delete"
+                            onClick={() => {
+                              invoiceIdToDelete.current = invoice.invoiceId;
+                              modalClosure.setOpen(true);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         </div>
-      </Card>
+      )}
 
       <Modal
         open={modalClosure.open}

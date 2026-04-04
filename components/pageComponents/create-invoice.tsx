@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef, ChangeEvent } from "react";
 import BackButton from "../ui/backButton";
 import { useRouter } from "next/navigation";
-import InvoiceDetails from "./invoice-details";
 import axios from "axios";
 import { backend_domain } from "@/constants/URLs";
 
@@ -459,6 +458,7 @@ export default function CreateInvoice() {
           </Card>
 
           {/* Notes */}
+          {/*later limit the number of characters*/}
           <Card className="p-6 border border-slate-200">
             <label className="block text-sm font-medium text-foreground mb-2">
               Notes
