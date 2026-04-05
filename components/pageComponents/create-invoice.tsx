@@ -8,6 +8,7 @@ import BackButton from "../ui/backButton";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { backend_domain } from "@/constants/URLs";
+import { toast } from "sonner";
 
 export interface lineItemsTypes {
   id: number;
@@ -78,8 +79,10 @@ export default function CreateInvoice() {
 
     try {
       await axios.post(`${backend_domain}/api/invoices/create`, data);
+      toast.success("Invoice created successfully");
       router.push("/dashboard");
     } catch (error) {
+      toast.error("Failed to create invoice");
       console.log("failed to create invoice: ", error);
     }
   };
@@ -389,71 +392,73 @@ export default function CreateInvoice() {
               </Button>
             </div>
 
-            <div className="space-y-3">
-              {lineItems.map((item, index) => (
-                <div key={item.id} className="flex gap-3 items-end">
-                  <div className="flex-1">
-                    <label className="block text-xs font-medium text-muted-foreground mb-1">
-                      Name/Description
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Item name"
-                      value={item.name}
-                      onChange={(e) =>
-                        handleChange(e.target.value, "desc", index)
-                      }
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
+            <div className="overflow-x-auto">
+              <div className="space-y-3">
+                {lineItems.map((item, index) => (
+                  <div key={item.id} className="flex gap-3 items-end">
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
+                        Name/Description
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Item name"
+                        value={item.name}
+                        onChange={(e) =>
+                          handleChange(e.target.value, "desc", index)
+                        }
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      />
+                    </div>
+                    <div className="w-20">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
+                        Qty
+                      </label>
+                      <input
+                        //type="number"
+                        value={item.quantity}
+                        onChange={(e) =>
+                          handleChange(e.target.value, "quantity", index)
+                        }
+                        onKeyDown={preventNonNumbers}
+                        className="w-15 md:w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      />
+                    </div>
+                    <div className="w-24">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
+                        Price (&#8358;) {/*naira*/}
+                      </label>
+                      <input
+                        //type="number"
+                        value={item.price}
+                        onChange={(e) =>
+                          handleChange(e.target.value, "price", index)
+                        }
+                        onKeyDown={preventNonNumbers}
+                        placeholder="0.00"
+                        className="w-15 md:w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      />
+                    </div>
+                    <div className="w-24">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
+                        Amount
+                      </label>
+                      <input
+                        type="number"
+                        disabled
+                        value={item.amount}
+                        className="w-20 md:w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm"
+                      />
+                    </div>
+                    <button
+                      onClick={() => removeLineItem(item.id)}
+                      className="p-2 hover:bg-red-100 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </button>
                   </div>
-                  <div className="w-20">
-                    <label className="block text-xs font-medium text-muted-foreground mb-1">
-                      Qty
-                    </label>
-                    <input
-                      //type="number"
-                      value={item.quantity}
-                      onChange={(e) =>
-                        handleChange(e.target.value, "quantity", index)
-                      }
-                      onKeyDown={preventNonNumbers}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                  </div>
-                  <div className="w-24">
-                    <label className="block text-xs font-medium text-muted-foreground mb-1">
-                      Price (&#8358;) {/*naira*/}
-                    </label>
-                    <input
-                      //type="number"
-                      value={item.price}
-                      onChange={(e) =>
-                        handleChange(e.target.value, "price", index)
-                      }
-                      onKeyDown={preventNonNumbers}
-                      placeholder="0.00"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                  </div>
-                  <div className="w-24">
-                    <label className="block text-xs font-medium text-muted-foreground mb-1">
-                      Amount
-                    </label>
-                    <input
-                      type="number"
-                      disabled
-                      value={item.amount}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm"
-                    />
-                  </div>
-                  <button
-                    onClick={() => removeLineItem(item.id)}
-                    className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </button>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </Card>
 

@@ -13,6 +13,7 @@ import useDisclosure from "@/lib/disclosure";
 import { Modal } from "../modal";
 import { Spinner } from "../ui/spinner";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface ResponseInvoiceType {
   id: string;
@@ -87,6 +88,7 @@ export default function InvoicesList() {
     });
     return array;
   };
+
   const handleDelete = async (id: string) => {
     try {
       setLoading(true);
@@ -98,10 +100,12 @@ export default function InvoicesList() {
             setInvoices(transformInvoiceData(invoices.data));
           }
         });
+      toast.success("Invoice deleted successfully");
       setLoading(false);
     } catch (error) {
       console.log("Failed to delete invoice: ", error);
       setLoading(false);
+      toast.error("Failed to delete invoice");
     }
     modalClosure.setOpen(false);
   };
@@ -242,12 +246,13 @@ export default function InvoicesList() {
                           >
                             <Eye className="w-4 h-4 text-slate-600" />
                           </Link>
-                          <button
+                          <Link
+                            href={`${RoutesEnum.EDIT_INVOICE}/${invoice.invoiceId}`}
                             className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
                             title="Edit"
                           >
                             <Edit2 className="w-4 h-4 text-slate-600" />
-                          </button>
+                          </Link>
                           <button
                             className="p-2 hover:bg-red-100 rounded-lg transition-colors"
                             title="Delete"
@@ -282,7 +287,7 @@ export default function InvoicesList() {
             onClick={() => handleDelete(invoiceIdToDelete.current as string)}
             className="py-3 text-[1.15rem] text-white bg-red-600 w-full rounded-lg"
           >
-            Delete
+            {!loading ? <span>Delete</span> : <Spinner className="w-5 h-5" />}
           </button>
         </div>
       </Modal>

@@ -11,6 +11,7 @@ import {
 } from "@/constants/types";
 import { calculateActiveTickIndex } from "recharts/types/util/ChartUtils";
 import { Spinner } from "../ui/spinner";
+import { separateThousands } from "@/lib/utils";
 
 export default function Dashboard() {
   const [invoices, setInvoices] =
@@ -119,37 +120,6 @@ export default function Dashboard() {
     },
   ];
 
-  const recentInvoices = [
-    {
-      id: "INV-001",
-      client: "Acme Corp",
-      amount: "$2,500",
-      date: "Oct 20, 2025",
-      status: "Paid",
-    },
-    {
-      id: "INV-002",
-      client: "Tech Solutions",
-      amount: "$1,800",
-      date: "Oct 18, 2025",
-      status: "Pending",
-    },
-    {
-      id: "INV-003",
-      client: "Global Industries",
-      amount: "$3,200",
-      date: "Oct 15, 2025",
-      status: "Paid",
-    },
-    {
-      id: "INV-004",
-      client: "StartUp Labs",
-      amount: "$950",
-      date: "Oct 12, 2025",
-      status: "Overdue",
-    },
-  ];
-
   return (
     <div className="p-8 space-y-8">
       {/* Header */}
@@ -172,7 +142,7 @@ export default function Dashboard() {
                     {stat.label}
                   </p>
                   <p className="text-2xl font-bold text-foreground mt-2">
-                    &#8358;{stat.value}
+                    &#8358;{separateThousands(stat.value)}
                   </p>
                   <p className="text-xs text-slate-500 mt-2">{stat.change}</p>
                 </div>

@@ -11,6 +11,7 @@ import useDisclosure from "@/lib/disclosure";
 import { Modal } from "../modal";
 import { set } from "react-hook-form";
 import { Spinner } from "../ui/spinner";
+import { toast } from "sonner";
 
 interface ClientType {
   id: string;
@@ -84,10 +85,11 @@ export default function ClientsManagement() {
           if (res.data.ok) {
             const clients = await axios.get(endpoints.getClients);
             setClients(transformClientData(clients.data));
+            toast.success("Client deleted successfully");
           }
         });
     } catch (error) {
-      console.log("Failed to delete invoice: ", error);
+      toast.error("Failed to delete client. Please try again.");
     }
     deleteModal.setOpen(false);
   };
@@ -134,7 +136,7 @@ export default function ClientsManagement() {
         setShowForm(false);
         axios.get(endpoints.getClients).then(({ data }) => {
           setClients(transformClientData(data as ClientFullResponseType));
-          setLoading;
+          toast.success("Client added successfully");
         });
       }
     });
@@ -153,11 +155,13 @@ export default function ClientsManagement() {
           setClients(transformClientData(res.data as ClientFullResponseType));
         });
       editClientModal.setOpen(false);
-      setLoading;
+      setLoading(false);
+      toast.success("Client updated successfully");
     } catch (error) {
       console.log("error updating client: ", error);
       editClientModal.setOpen(false);
-      setLoading;
+      setLoading(false);
+      toast.error("Failed to update client.");
     }
   };
 

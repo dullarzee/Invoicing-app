@@ -25,6 +25,9 @@ import Link from "next/link";
 import { Modal } from "../modal";
 import useDisclosure from "@/lib/disclosure";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import BackButton from "../ui/backButton";
+import { separateThousands } from "@/lib/utils";
 
 export default function InvoiceDetails() {
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -58,11 +61,12 @@ export default function InvoiceDetails() {
         .then(async (res) => {
           if (res.data.ok) {
             const invoices = await axios.get(endpoints.getInvoices);
+            toast.success("Invoice deleted successfully");
             router.back();
           }
         });
     } catch (error) {
-      console.log("Failed to delete invoice: ", error);
+      toast.error("Failed to delete invoice");
     }
     modalClosure.setOpen(false);
   };
@@ -84,9 +88,11 @@ export default function InvoiceDetails() {
       link.click();
       link.parentNode?.removeChild(link);
       URL.revokeObjectURL(url);
+      toast.success("PDF downloaded successfully");
 
       console.log("pdf download response: ", res);
     } catch (error) {
+      toast.error("Failed to download PDF");
       console.log("error downloading pdf: ", error);
     }
   };
@@ -117,6 +123,16 @@ export default function InvoiceDetails() {
     }
   };
 
+  const copyPageLink = async () => {
+    try {
+      const url = `${window.location.origin}${RoutesEnum.INVOICE_DETAIL}/${params.invoiceId}`;
+      await navigator.clipboard.writeText(url);
+      toast.success("Invoice link copied to clipboard");
+    } catch (error) {
+      toast.error("Failed to copy link");
+    }
+  };
+
   const shortenedInvoiceId = invoiceDetails?.id
     ? `INV-${invoiceDetails.id.slice(0, 8)}`
     : "Invoice ID";
@@ -136,11 +152,9 @@ export default function InvoiceDetails() {
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
+      <div className="flex flex-col md:flex-row items-center justify-between">
+        <div className="flex md:items-center gap-4 /border border-red-500 w-[120%] md:w-auto">
+          <BackButton />
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               {shortenedInvoiceId}
@@ -215,7 +229,7 @@ export default function InvoiceDetails() {
                     From
                   </p>
                   <p className="font-semibold text-foreground">
-                    Gbenga's Company
+                    G-R Tech Services
                   </p>
                   <p className="text-sm text-muted-foreground">
                     company@example.com
@@ -255,10 +269,10 @@ export default function InvoiceDetails() {
                           {item.quantity}
                         </td>
                         <td className="text-sm text-foreground text-center">
-                          &#8358;{item.price}
+                          &#8358;{separateThousands(item.price)}
                         </td>
                         <td className="text-sm font-semibold text-foreground text-center">
-                          &#8358;{item.quantity * item.price}
+                          &#8358;{separateThousands(item.quantity * item.price)}
                         </td>
                       </tr>
                     ))}
@@ -272,7 +286,7 @@ export default function InvoiceDetails() {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
                     <span className="text-foreground">
-                      &#8358;{totalAmount}
+                      &#8358;{separateThousands(totalAmount)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -285,19 +299,23 @@ export default function InvoiceDetails() {
                     </span>
                     <span className="text-foreground">
                       &#8358;
-                      {invoiceDetails?.taxInPercent
-                        ? (totalAmount * invoiceDetails.taxInPercent) / 100
-                        : 0}
+                      {separateThousands(
+                        invoiceDetails?.taxInPercent
+                          ? (totalAmount * invoiceDetails.taxInPercent) / 100
+                          : 0,
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between border-t border-slate-200 pt-2 font-semibold">
                     <span className="text-foreground">Total</span>
                     <span className="text-lg text-blue-500">
                       &#8358;
-                      {totalAmount +
-                        (invoiceDetails?.taxInPercent
-                          ? (totalAmount * invoiceDetails.taxInPercent) / 100
-                          : 0)}
+                      {separateThousands(
+                        totalAmount +
+                          (invoiceDetails?.taxInPercent
+                            ? (totalAmount * invoiceDetails.taxInPercent) / 100
+                            : 0),
+                      )}
                     </span>
                   </div>
                 </div>
@@ -335,10 +353,12 @@ export default function InvoiceDetails() {
             </h3>
             <p className="text-3xl font-bold text-foreground">
               &#8358;
-              {totalAmount +
-                (invoiceDetails?.taxInPercent
-                  ? (totalAmount * invoiceDetails.taxInPercent) / 100
-                  : 0)}
+              {separateThousands(
+                totalAmount +
+                  (invoiceDetails?.taxInPercent
+                    ? (totalAmount * invoiceDetails.taxInPercent) / 100
+                    : 0),
+              )}
             </p>
             <p className="text-xs text-muted-foreground mt-2">
               Total amount due
@@ -371,11 +391,17 @@ export default function InvoiceDetails() {
                   Share
                 </Button>
                 {showShareMenu && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg p-2 z-10">
+                  <div
+                    onClick={() => setShowShareMenu(false)}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg p-2 z-10"
+                  >
                     <button className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 rounded">
                       Email to client
                     </button>
-                    <button className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 rounded">
+                    <button
+                      onClick={copyPageLink}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 rounded"
+                    >
                       Copy invoice link
                     </button>
                     <button className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 rounded">
