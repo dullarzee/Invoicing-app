@@ -17,7 +17,7 @@ export default function NavBar() {
     setOpen(false);
   }, [pathname]);
   return (
-    <section className="flex justify-between items-center w-full h-16 bg-slate-900 text-white px-5 border-b border-slate-800">
+    <section className="flex md:hidden justify-between items-center w-full h-16 bg-slate-900 text-white px-5 border-b border-slate-800">
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
           <span className="text-xs font-bold">G-R</span>
