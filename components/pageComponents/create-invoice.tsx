@@ -10,6 +10,8 @@ import axios from "axios";
 import { backend_domain } from "@/constants/URLs";
 import { toast } from "sonner";
 
+export const dynamic = "force-dynamic";
+
 export interface lineItemsTypes {
   id: number;
   name: string;
@@ -131,7 +133,7 @@ export default function CreateInvoice() {
     fetch();
   }, []);
 
-  console.log("Enviroment is: ", process.env.ENV);
+  console.log("Enviroment is: ", process.env.ENVIRONMENT);
 
   const handleChange = (value: string, type: string, index: number) => {
     if (type === "price") {
