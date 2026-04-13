@@ -27,7 +27,7 @@ import useDisclosure from "@/lib/disclosure";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import BackButton from "../ui/backButton";
-import { separateThousands } from "@/lib/utils";
+import { separateThousands, handleDownloadPDF } from "@/lib/utils";
 
 export default function InvoiceDetails() {
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -69,32 +69,6 @@ export default function InvoiceDetails() {
       toast.error("Failed to delete invoice");
     }
     modalClosure.setOpen(false);
-  };
-
-  const handleDownloadPDF = async () => {
-    try {
-      const res = await axios.get(
-        `${endpoints.downloadInvoicePDF}/${params.invoiceId}`,
-        {
-          responseType: "blob",
-        },
-      );
-      //
-      const url = URL.createObjectURL(res.data);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `${invoiceDetails?.id}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode?.removeChild(link);
-      URL.revokeObjectURL(url);
-      toast.success("PDF downloaded successfully");
-
-      console.log("pdf download response: ", res);
-    } catch (error) {
-      toast.error("Failed to download PDF");
-      console.log("error downloading pdf: ", error);
-    }
   };
 
   const getStatusIcon = () => {
@@ -166,7 +140,7 @@ export default function InvoiceDetails() {
         </div>
         <div className="flex items-center gap-2">
           <Button
-            onClick={handleDownloadPDF}
+            onClick={() => handleDownloadPDF(params.invoiceId)}
             className="bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-foreground flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
@@ -372,7 +346,7 @@ export default function InvoiceDetails() {
             </h3>
             <div className="space-y-2">
               <Button
-                onClick={handleDownloadPDF}
+                onClick={() => handleDownloadPDF(params.invoiceId)}
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center gap-2"
               >
                 <Download className="w-4 h-4" />

@@ -35,6 +35,10 @@ export type ClientFullResponseType = (ClientsType & {
   invoices: InvoiceWithLineItemsType[];
 })[];
 
+export type ClientFullResponseTypeSingle = ClientsType & {
+  invoices: InvoiceWithLineItemsType[];
+};
+
 export type InvoiceFullResponseType = InvoiceType & {
   lineItems?: LineItemType[];
 };

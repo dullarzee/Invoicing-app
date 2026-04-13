@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, LineChart, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, LineChart, Plus, Save, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef, ChangeEvent } from "react";
@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { backend_domain } from "@/constants/URLs";
 import { toast } from "sonner";
+import { separateThousands, stripCommas } from "@/lib/utils";
+import { Spinner } from "../ui/spinner";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +40,7 @@ export interface invoiceType {
 export default function CreateInvoice() {
   const [clients, setclients] = useState<clientsType[]>([]);
   const [isFormInvalid, setIsFormInvalid] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [lineItems, setLineItems] = useState<lineItemsTypes[]>([
     { id: Date.now(), name: "", quantity: 0, price: 0, amount: 0 },
   ]);
@@ -64,6 +67,7 @@ export default function CreateInvoice() {
   const router = useRouter();
 
   const handleSubmit = async () => {
+    setLoading(true);
     const dueDate = new Date(invoiceInfo.dueDate).toISOString();
     const clientId = invoiceInfo.clientId;
     const note = invoiceInfo.noteAttached;
@@ -82,10 +86,11 @@ export default function CreateInvoice() {
     try {
       await axios.post(`${backend_domain}/api/invoices/create`, data);
       toast.success("Invoice created successfully");
+      setLoading(false);
       router.push("/dashboard");
     } catch (error) {
       toast.error("Failed to create invoice");
-      console.log("failed to create invoice: ", error);
+      setLoading(false);
     }
   };
 
@@ -418,9 +423,13 @@ export default function CreateInvoice() {
                       </label>
                       <input
                         //type="number"
-                        value={item.quantity}
+                        value={separateThousands(item.quantity)}
                         onChange={(e) =>
-                          handleChange(e.target.value, "quantity", index)
+                          handleChange(
+                            stripCommas(e.target.value),
+                            "quantity",
+                            index,
+                          )
                         }
                         onKeyDown={preventNonNumbers}
                         className="w-15 md:w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
@@ -432,9 +441,13 @@ export default function CreateInvoice() {
                       </label>
                       <input
                         //type="number"
-                        value={item.price}
+                        value={separateThousands(item.price)}
                         onChange={(e) =>
-                          handleChange(e.target.value, "price", index)
+                          handleChange(
+                            stripCommas(e.target.value),
+                            "price",
+                            index,
+                          )
                         }
                         onKeyDown={preventNonNumbers}
                         placeholder="0.00"
@@ -446,9 +459,9 @@ export default function CreateInvoice() {
                         Amount
                       </label>
                       <input
-                        type="number"
+                        type="text"
                         disabled
-                        value={item.amount}
+                        value={separateThousands(item.amount)}
                         className="w-20 md:w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm"
                       />
                     </div>
@@ -507,7 +520,8 @@ export default function CreateInvoice() {
               <div className="border-t border-slate-200 pt-3 flex justify-between">
                 <span className="font-semibold text-foreground">Total</span>
                 <span className="text-xl font-bold text-blue-500">
-                  &#8358; {cummulatives.total.toFixed(2)}
+                  &#8358;{" "}
+                  {separateThousands(parseInt(cummulatives.total.toFixed(2)))}
                 </span>
               </div>
             </div>
@@ -518,7 +532,14 @@ export default function CreateInvoice() {
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white disabled:bg-blue-300 cursor-pointer"
                 disabled={isFormInvalid}
               >
-                Save Invoice
+                {loading ? (
+                  <Spinner className="w-5 h-5" />
+                ) : (
+                  <span className="contents">
+                    <Save className="w-4 h-4" />
+                    Save Invoice
+                  </span>
+                )}
               </Button>
               <Button className="w-full bg-slate-200 hover:bg-slate-300 text-foreground">
                 Cancel

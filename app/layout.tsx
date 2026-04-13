@@ -27,7 +27,7 @@ export default function RootLayout({
       <body className={`font-sans antialiased`}>
         <NavBar />
         <Sidebar />
-        <div className="lg:ml-64">{children}</div>
+        <div className="lg:ml-64 mt-16 lg:mt-0">{children}</div>
         <Analytics />
         <Toaster position="top-right" richColors />
       </body>
