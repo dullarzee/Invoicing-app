@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Plus, Edit2, Trash2, Mail, Phone } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, Mail, Phone, Eye } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import React, { useEffect, useState } from "react";
@@ -12,6 +12,8 @@ import { Modal } from "../modal";
 import { set } from "react-hook-form";
 import { Spinner } from "../ui/spinner";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { RoutesEnum } from "@/constants/routeEnums";
 
 interface ClientType {
   id: string;
@@ -45,6 +47,7 @@ export default function ClientsManagement() {
     phoneNumber: "",
     id: "",
   });
+  const router = useRouter();
 
   const [loading, setLoading] = useState(true);
 
@@ -311,6 +314,14 @@ export default function ClientsManagement() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() =>
+                        router.push(RoutesEnum.CLIENT_DETAIL + `/${client.id}`)
+                      }
+                      className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => {
                         setClientToEdit({

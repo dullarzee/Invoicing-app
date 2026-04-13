@@ -6,4 +6,5 @@ export enum RoutesEnum {
   SETTINGS = "/settings",
   INVOICE_DETAIL = "/invoice_details", //flag = /:id
   EDIT_INVOICE = "/edit_invoice",
+  CLIENT_DETAIL = "/client_details", //flag = /:id
 }
